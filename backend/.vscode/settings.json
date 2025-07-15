@@ -1,0 +1,19 @@
+{
+  // Format code automatically on save
+  "editor.formatOnSave": true,
+
+  // Use Black as the formatter
+  "python.formatting.provider": "black",
+
+  // Enable linting and use flake8 as the linter
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+
+  // Sort imports automatically using isort
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+
+  // Pass Black profile to isort for consistent formatting
+  "python.sortImports.args": ["--profile", "black"]
+}

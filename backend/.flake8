@@ -1,0 +1,25 @@
+[flake8]
+max-line-length = 88
+exclude = venv, migrations, __pycache__
+ignore = 
+    # Whitespace and formatting
+    E123, E124, E126, E127, E128, E129, E131, E133,
+    E201, E202, E203, E221, E222, E223, E224, E225,
+    E226, E227, E228, E231, E241, E242, E251, E261,
+    E262, E265, E266, E271, E272, E273, E274, E275,
+    E301, E302, E303, E304, E305, E306, E401, E402,
+    E502, E701, E702, E703, E704, E711, E712, E713,
+    E714, E721, E722, E731, E741, E742, E743,
+
+    # Line length and style (Black handles this)
+    E501, W503,
+
+    # Import-related
+    F401, F403, F405,
+
+    # Undefined names / logic issues
+    F811, F821, F822, F823, F831, F841,
+
+    # Syntax / runtime errors
+    E999, E901, E902,
+    F901, F902, F999
