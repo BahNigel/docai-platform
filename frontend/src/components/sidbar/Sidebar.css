@@ -1,0 +1,42 @@
+.sidebar {
+  background-color: #111827; /* slightly lighter than #0a0f1c for separation */
+  width: 250px;
+  min-height: 100vh;
+  transition: width 0.3s ease;
+  border-right: 1px solid #2e3b5c;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+  overflow-x: hidden;
+}
+
+.sidebar .nav-link {
+  padding: 10px;
+  border-radius: 0.375rem;
+  color: #cbd5e1;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.sidebar .nav-link:hover {
+  background-color: #1e293b;
+  color: white !important;
+}
+
+.sidebar .nav-link.active {
+  background-color: #2563eb; /* Tailwind-style blue */
+  color: white !important;
+  font-weight: 500;
+}
+
+.toggle-btn {
+  background-color: transparent;
+  border: 1px solid #2e3b5c;
+  color: #cbd5e1;
+}
+
+.toggle-btn:hover {
+  background-color: #1e293b;
+  border-color: #3b82f6;
+  color: white;
+}
