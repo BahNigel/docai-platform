@@ -17,3 +17,4 @@ frontend/.cache/
 frontend/.next/
 frontend/.nuxt/
 frontend/.vscode/  
+frontend/package-lock.json
