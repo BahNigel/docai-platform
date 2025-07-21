@@ -18,3 +18,4 @@ frontend/.next/
 frontend/.nuxt/
 frontend/.vscode/  
 frontend/package-lock.json
+frontend/yarn.lock
