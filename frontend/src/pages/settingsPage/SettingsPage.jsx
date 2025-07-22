@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/sidbar/Sidebar';
+import Header from '../../components/header/Header';
 
 const languages = [
   'English',
@@ -48,20 +50,19 @@ const languages = [
 ];
 
 const SettingsPage = () => {
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState('example_user');
   const [email, setEmail] = useState('user@example.com');
   const [password, setPassword] = useState('********');
   const [language, setLanguage] = useState('English');
-
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
-  // Edit modes
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
   const [editingLanguage, setEditingLanguage] = useState(false);
 
-  // Temp fields
   const [tempUsername, setTempUsername] = useState(username);
   const [tempEmail, setTempEmail] = useState(email);
   const [tempPassword, setTempPassword] = useState('');
@@ -92,6 +93,14 @@ const SettingsPage = () => {
     setEditingLanguage(false);
   };
 
+  // ✅ Updated logout function
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('username');
+    navigate('/');
+  };
+
   return (
     <div
       className="d-flex"
@@ -99,10 +108,8 @@ const SettingsPage = () => {
     >
       <Sidebar />
 
-      <div className="flex-grow-1 p-4 text-white">
-        <h1 className="mb-4 fw-bold" style={{ fontSize: '2rem' }}>
-          Settings
-        </h1>
+      <div className="flex-grow-1 p-4 text-white d-flex flex-column">
+        <Header pageTitle="Settings" />
 
         {/* Account Section */}
         <div
@@ -299,7 +306,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Notifications Section */}
+        {/* Notifications */}
         <div
           className="card text-white border-0 rounded-4 shadow-sm"
           style={{ backgroundColor: '#1a2238' }}
@@ -320,6 +327,13 @@ const SettingsPage = () => {
               </label>
             </div>
           </div>
+        </div>
+
+        {/* Logout Button */}
+        <div className="mt-auto pt-4">
+          <button className="btn btn-danger w-100" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </div>
     </div>

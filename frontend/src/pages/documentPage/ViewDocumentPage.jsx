@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Sidebar from '../../components/sidbar/Sidebar';
+import Header from '../../components/header/Header';
 
 const ViewDocumentPage = () => {
   const canvasRef = useRef(null);
@@ -89,7 +90,7 @@ const ViewDocumentPage = () => {
       <Sidebar />
 
       <div className="flex-grow-1 p-4">
-        <h2 className="fw-bold mb-4">View Document</h2>
+        <Header pageTitle="View Doc" initials="VD" />
 
         {/* Upload Section */}
         <div

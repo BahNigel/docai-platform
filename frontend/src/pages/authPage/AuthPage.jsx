@@ -1,66 +1,99 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- import navigation hook
+import axios from 'axios';
 
-const AuthPage = () => {
+function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    confirmPassword: '',
   });
 
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-    setFormData({ username: '', email: '', password: '', confirmPassword: '' });
-  };
+  const navigate = useNavigate(); // <-- initialize navigation
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isLogin && formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
-      return;
+
+    const payload = isLogin
+      ? { username: formData.username, password: formData.password }
+      : {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        };
+
+    try {
+      if (isLogin) {
+        const res = await axios.post(
+          'http://localhost:8000/api/token/',
+          payload,
+        );
+        localStorage.setItem('access_token', res.data.access);
+        localStorage.setItem('refresh_token', res.data.refresh);
+        localStorage.setItem('username', formData.username); // save username
+        alert('Logged in successfully!');
+        navigate('/home'); // <-- redirect to /home
+      } else {
+        await axios.post('http://localhost:8000/api/register/', payload);
+        alert('Registered successfully. Now you can log in.');
+        setIsLogin(true);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Authentication failed.');
     }
-    console.log(isLogin ? 'Logging in...' : 'Registering...', formData);
   };
 
   return (
     <div
-      className="d-flex align-items-center justify-content-center"
-      style={{ minHeight: '100vh', backgroundColor: '#0d1117', color: '#fff' }}
+      style={{
+        backgroundColor: '#0f172a',
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '2rem',
+      }}
     >
-      <div
-        className="card p-4 shadow-lg border-0 rounded-4"
-        style={{ backgroundColor: '#1a2238', width: '100%', maxWidth: '420px' }}
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          backgroundColor: '#1e293b',
+          color: '#fff',
+          padding: '2rem',
+          borderRadius: '8px',
+          maxWidth: '400px',
+          width: '100%',
+          boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+        }}
       >
-        <h3 className="text-center fw-bold mb-4" style={{ color: '#fff' }}>
-          {isLogin ? 'Login to Your Account' : 'Create an Account'}
-        </h3>
+        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          {isLogin ? 'Login' : 'Register'}
+        </h2>
 
-        <form onSubmit={handleSubmit}>
-          {!isLogin && (
-            <div className="mb-3">
-              <label className="form-label" style={{ color: '#fff' }}>
-                Username
-              </label>
-              <input
-                name="username"
-                type="text"
-                className="form-control text-white border-secondary"
-                style={{ backgroundColor: '#1a2238' }}
-                value={formData.username}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          )}
+        {/* Username */}
+        <div className="mb-3">
+          <label className="form-label">Username</label>
+          <input
+            name="username"
+            type="text"
+            className="form-control text-white border-secondary"
+            style={{ backgroundColor: '#1a2238' }}
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        {/* Email (only if Registering) */}
+        {!isLogin && (
           <div className="mb-3">
-            <label className="form-label" style={{ color: '#fff' }}>
-              Email address
-            </label>
+            <label className="form-label">Email</label>
             <input
               name="email"
               type="email"
@@ -71,59 +104,48 @@ const AuthPage = () => {
               required
             />
           </div>
+        )}
 
-          <div className="mb-3">
-            <label className="form-label" style={{ color: '#fff' }}>
-              Password
-            </label>
-            <input
-              name="password"
-              type="password"
-              className="form-control text-white border-secondary"
-              value={formData.password}
-              style={{ backgroundColor: '#1a2238' }}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {!isLogin && (
-            <div className="mb-3">
-              <label className="form-label" style={{ color: '#fff' }}>
-                Confirm Password
-              </label>
-              <input
-                name="confirmPassword"
-                type="password"
-                className="form-control text-white border-secondary"
-                style={{ backgroundColor: '#1a2238' }}
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          )}
-
-          <button type="submit" className="btn btn-primary w-100 rounded-3">
-            {isLogin ? 'Login' : 'Register'}
-          </button>
-        </form>
-
-        <div className="text-center mt-4">
-          <small style={{ color: '#fff' }}>
-            {isLogin ? 'Don’t have an account!' : 'Already have an account!'}{' '}
-            <button
-              type="button"
-              className="btn btn-link p-0 text-info"
-              onClick={toggleAuthMode}
-            >
-              {isLogin ? 'Register' : 'Login'}
-            </button>
-          </small>
+        {/* Password */}
+        <div className="mb-3">
+          <label className="form-label">Password</label>
+          <input
+            name="password"
+            type="password"
+            className="form-control text-white border-secondary"
+            style={{ backgroundColor: '#1a2238' }}
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
         </div>
-      </div>
+
+        {/* Submit */}
+        <button type="submit" className="btn btn-primary w-100">
+          {isLogin ? 'Login' : 'Register'}
+        </button>
+
+        {/* Toggle */}
+        <p style={{ marginTop: '1rem', textAlign: 'center' }}>
+          {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+          <button
+            type="button"
+            onClick={() => setIsLogin(!isLogin)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#0ea5e9',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            {isLogin ? 'Register here' : 'Login here'}
+          </button>
+        </p>
+      </form>
     </div>
   );
-};
+}
 
 export default AuthPage;

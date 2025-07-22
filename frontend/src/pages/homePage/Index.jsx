@@ -11,6 +11,7 @@ import {
 } from 'react-icons/ai';
 import { AiOutlineStar } from 'react-icons/ai'; // For Generative AI (closest match)
 import { BsBell, BsSearch, BsThreeDotsVertical } from 'react-icons/bs';
+import Header from '../../components/header/Header';
 
 export default function HomePage() {
   // Document icons (keep using Bs icons for these, or replace if you want)
@@ -39,19 +40,7 @@ export default function HomePage() {
         style={{ minHeight: '100vh', backgroundColor: '#0a0f1c' }}
       >
         {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2>AI-Powered Intelligent Knowledge Management Platform</h2>
-          <div className="d-flex gap-3 align-items-center">
-            <BsBell className="text-white fs-5" />
-            <BsSearch className="text-white fs-5" />
-            <div
-              className="bg-secondary rounded-circle d-flex justify-content-center align-items-center"
-              style={{ width: '32px', height: '32px' }}
-            >
-              JD
-            </div>
-          </div>
-        </div>
+        <Header pageTitle="Home" initials="NB" />
 
         {/* Repository Section */}
         <div className="row">
