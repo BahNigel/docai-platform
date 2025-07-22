@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- import navigation hook
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function AuthPage() {
@@ -8,9 +8,10 @@ function AuthPage() {
     username: '',
     email: '',
     password: '',
+    confirm_password: '', // Add confirm_password to state
   });
 
-  const navigate = useNavigate(); // <-- initialize navigation
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -25,6 +26,7 @@ function AuthPage() {
           username: formData.username,
           email: formData.email,
           password: formData.password,
+          confirm_password: formData.confirm_password, // Add confirm_password
         };
 
     try {
@@ -35,17 +37,20 @@ function AuthPage() {
         );
         localStorage.setItem('access_token', res.data.access);
         localStorage.setItem('refresh_token', res.data.refresh);
-        localStorage.setItem('username', formData.username); // save username
+        localStorage.setItem('username', formData.username);
         alert('Logged in successfully!');
-        navigate('/home'); // <-- redirect to /home
+        navigate('/home');
       } else {
         await axios.post('http://localhost:8000/api/register/', payload);
         alert('Registered successfully. Now you can log in.');
         setIsLogin(true);
       }
     } catch (err) {
-      console.error(err);
-      alert('Authentication failed.');
+      console.error('Error:', err.response?.data || err.message);
+      alert(
+        'Authentication failed: ' +
+          JSON.stringify(err.response?.data || err.message),
+      );
     }
   };
 
@@ -119,6 +124,22 @@ function AuthPage() {
             required
           />
         </div>
+
+        {/* Confirm Password (only if Registering) */}
+        {!isLogin && (
+          <div className="mb-3">
+            <label className="form-label">Confirm Password</label>
+            <input
+              name="confirm_password"
+              type="password"
+              className="form-control text-white border-secondary"
+              style={{ backgroundColor: '#1a2238' }}
+              value={formData.confirm_password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        )}
 
         {/* Submit */}
         <button type="submit" className="btn btn-primary w-100">
