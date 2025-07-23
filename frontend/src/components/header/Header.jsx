@@ -1,5 +1,4 @@
 import React from 'react';
-import { BsBell, BsSearch } from 'react-icons/bs';
 
 const Header = ({ pageTitle = 'Dashboard' }) => {
   // Get username from localStorage or fallback
@@ -19,8 +18,6 @@ const Header = ({ pageTitle = 'Dashboard' }) => {
     <div className="d-flex justify-content-between align-items-center mb-4">
       <h2 className="text-white text-uppercase mb-0">{pageTitle}</h2>
       <div className="d-flex gap-3 align-items-center">
-        <BsBell className="text-white fs-5" />
-        <BsSearch className="text-white fs-5" />
         <div
           className="bg-secondary rounded-circle d-flex justify-content-center align-items-center text-white"
           style={{ width: '32px', height: '32px' }}

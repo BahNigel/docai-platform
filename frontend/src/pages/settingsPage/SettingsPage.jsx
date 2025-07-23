@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/sidbar/Sidebar';
 import Header from '../../components/header/Header';
+import { apiRequest } from '../../components/enteryPoint/entryPoint';
 
 const languages = [
   'English',
@@ -51,49 +52,127 @@ const languages = [
 
 const SettingsPage = () => {
   const navigate = useNavigate();
+  const token = localStorage.getItem('access_token');
 
-  const [username, setUsername] = useState('example_user');
-  const [email, setEmail] = useState('user@example.com');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('********');
   const [language, setLanguage] = useState('English');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
   const [editingLanguage, setEditingLanguage] = useState(false);
 
-  const [tempUsername, setTempUsername] = useState(username);
-  const [tempEmail, setTempEmail] = useState(email);
+  const [tempUsername, setTempUsername] = useState('');
+  const [tempEmail, setTempEmail] = useState('');
   const [tempPassword, setTempPassword] = useState('');
-  const [tempLanguage, setTempLanguage] = useState(language);
+  const [tempLanguage, setTempLanguage] = useState('');
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/');
+      return;
+    }
+    console.log('token check', `Bearer ${token}`);
+
+    apiRequest('/user/', 'get', null, {
+      Authorization: `Bearer ${token}`,
+    }).then((res) => {
+      if (res.success) {
+        setUsername(res.data.username);
+        setEmail(res.data.email);
+        setLanguage(res.data.language || 'English');
+      } else {
+        alert('Failed to load user data');
+      }
+    });
+  }, [token, navigate]);
 
   const saveUsername = () => {
-    setUsername(tempUsername);
-    setEditingUsername(false);
+    apiRequest(
+      '/user/',
+      'patch',
+      { username: tempUsername },
+      {
+        Authorization: `Bearer ${token}`,
+      },
+    ).then((res) => {
+      if (res.success) {
+        setUsername(res.data.username);
+        setEditingUsername(false);
+      } else {
+        const err = res.error?.username || res.error;
+        alert(
+          typeof err === 'string' ? err : err[0] || 'Failed to update username',
+        );
+      }
+    });
   };
 
   const saveEmail = () => {
-    setEmail(tempEmail);
-    setEditingEmail(false);
+    apiRequest(
+      '/user/',
+      'patch',
+      { email: tempEmail },
+      {
+        Authorization: `Bearer ${token}`,
+      },
+    ).then((res) => {
+      if (res.success) {
+        setEmail(res.data.email);
+        setEditingEmail(false);
+      } else {
+        const err = res.error?.email || res.error;
+        alert(
+          typeof err === 'string' ? err : err[0] || 'Failed to update email',
+        );
+      }
+    });
   };
 
   const savePassword = () => {
     if (tempPassword.length >= 6) {
-      setPassword('********');
-      setTempPassword('');
-      setEditingPassword(false);
+      apiRequest(
+        '/change-password/',
+        'post',
+        { password: tempPassword },
+        {
+          Authorization: `Bearer ${token}`,
+        },
+      ).then((res) => {
+        if (res.success) {
+          setPassword('********');
+          setTempPassword('');
+          setEditingPassword(false);
+          alert('Password updated successfully');
+        } else {
+          alert(res.error?.error || 'Failed to update password');
+        }
+      });
     } else {
       alert('Password must be at least 6 characters');
     }
   };
 
   const saveLanguage = () => {
-    setLanguage(tempLanguage);
-    setEditingLanguage(false);
+    apiRequest(
+      '/user/',
+      'patch',
+      { language: tempLanguage },
+      {
+        Authorization: `Bearer ${token}`,
+      },
+    ).then((res) => {
+      if (res.success) {
+        setLanguage(res.data.language);
+        setEditingLanguage(false);
+      } else {
+        alert('Failed to update language');
+      }
+    });
   };
 
-  // ✅ Updated logout function
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -302,29 +381,6 @@ const SettingsPage = () => {
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Notifications */}
-        <div
-          className="card text-white border-0 rounded-4 shadow-sm"
-          style={{ backgroundColor: '#1a2238' }}
-        >
-          <div className="card-body">
-            <h5 className="fw-semibold mb-3">Notifications</h5>
-            <div className="form-check form-switch">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="notificationsSwitch"
-                checked={notificationsEnabled}
-                onChange={() => setNotificationsEnabled(!notificationsEnabled)}
-              />
-              <label className="form-check-label" htmlFor="notificationsSwitch">
-                Receive notifications
-              </label>
             </div>
           </div>
         </div>

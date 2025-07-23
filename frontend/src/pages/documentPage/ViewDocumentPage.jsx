@@ -1,18 +1,38 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/sidbar/Sidebar';
 import Header from '../../components/header/Header';
+import { apiRequest } from '../../components/enteryPoint/entryPoint';
+import { pdfjs } from 'react-pdf';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 const ViewDocumentPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [documentName, setDocumentName] = useState('document.pdf');
-  const [editableText, setEditableText] = useState(
-    'Editable text with ability to draw...',
-  );
-  const [uploadedFile, setUploadedFile] = useState(null);
-  const [titleInput, setTitleInput] = useState(documentName);
+  const [documentName, setDocumentName] = useState('');
+  const [editableText, setEditableText] = useState('');
+  const [fileUrl, setFileUrl] = useState(null);
+  const [titleInput, setTitleInput] = useState('');
 
-  // Canvas Drawing Setup
+  useEffect(() => {
+    const fetchDocument = async () => {
+      const response = await apiRequest(`/documents/${id}/`, 'get');
+      if (response.success) {
+        const doc = response.data;
+        setDocumentName(doc.title);
+        setTitleInput(doc.title);
+        setEditableText(doc.content || '');
+        setFileUrl(doc.file);
+      } else {
+        console.error('Failed to fetch document:', response.error);
+      }
+    };
+    fetchDocument();
+  }, [id]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -46,16 +66,6 @@ const ViewDocumentPage = () => {
     };
   }, [isDrawing]);
 
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this file?')) {
-      setDocumentName('');
-      setTitleInput('');
-      setUploadedFile(null);
-      setEditableText('');
-      clearCanvas();
-    }
-  };
-
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -69,17 +79,78 @@ const ViewDocumentPage = () => {
     alert('Drawing submitted successfully!');
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setUploadedFile(file);
-      setDocumentName(file.name);
-      setTitleInput(file.name);
+  const handleDeleteDocument = async () => {
+    if (
+      !window.confirm(
+        'Are you sure you want to delete this document? This action cannot be undone.',
+      )
+    ) {
+      return;
+    }
+
+    const response = await apiRequest(`/documents/${id}/`, 'delete');
+    if (response.success) {
+      alert('Document deleted successfully.');
+      navigate('/documents');
+    } else {
+      alert('Failed to delete the document. Please try again.');
     }
   };
 
-  const handleTitleUpdate = () => {
-    setDocumentName(titleInput || 'Untitled Document');
+  const renderPreview = () => {
+    if (!fileUrl) return <p>No file available for preview.</p>;
+
+    const extension = fileUrl.split('.').pop().toLowerCase();
+
+    if (extension === 'pdf') {
+      return (
+        <div className="d-flex flex-column align-items-start">
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-outline-primary mb-3"
+          >
+            📄 View "{documentName}" PDF in New Tab
+          </a>
+        </div>
+      );
+    }
+
+    if (['mp4', 'webm'].includes(extension)) {
+      return <video width="100%" height="300" controls src={fileUrl} />;
+    }
+
+    if (['mp3', 'wav', 'ogg', 'aac', 'm4a'].includes(extension)) {
+      return (
+        <div className="d-flex flex-column align-items-start">
+          <audio
+            controls
+            src={fileUrl}
+            style={{ width: '100%', marginBottom: 40 }}
+          >
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      );
+    }
+
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+      return <img src={fileUrl} alt="Preview" style={{ maxWidth: '100%' }} />;
+    }
+
+    return (
+      <div className="d-flex flex-column align-items-start">
+        <a
+          href={fileUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="btn btn-outline-primary mb-3"
+        >
+          📁 View "{documentName}" File in New Tab
+        </a>
+      </div>
+    );
   };
 
   return (
@@ -90,42 +161,10 @@ const ViewDocumentPage = () => {
       <Sidebar />
 
       <div className="flex-grow-1 p-4">
-        <Header pageTitle="View Doc" initials="VD" />
-
-        {/* Upload Section */}
-        <div
-          className="card border-0 shadow rounded-4 p-4 mb-4"
-          style={{ backgroundColor: '#161b2d' }}
-        >
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label className="form-label fw-semibold">Upload Document</label>
-              <input
-                type="file"
-                className="form-control"
-                onChange={handleFileUpload}
-              />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label className="form-label fw-semibold">Document Title</label>
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  value={titleInput}
-                  onChange={(e) => setTitleInput(e.target.value)}
-                  placeholder="Enter document title"
-                />
-                <button className="btn btn-primary" onClick={handleTitleUpdate}>
-                  Save Title
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Header pageTitle="View Document" initials="VD" />
 
         <div className="row">
-          {/* Document Preview */}
+          {/* File Preview Section */}
           <div className="col-md-5 mb-4">
             <div
               className="card text-white border-0 shadow rounded-4 p-3 h-100"
@@ -134,20 +173,12 @@ const ViewDocumentPage = () => {
               <h5 className="mb-3 fw-semibold">
                 {documentName || 'No Document'}
               </h5>
-              <div
-                className="bg-white text-dark rounded p-3"
-                style={{ height: '400px', overflowY: 'auto' }}
-              >
-                <p>
-                  <strong>{titleInput || 'Sample Document'}</strong>
-                </p>
-                <p>Lorem ipsum dolor sit amet consectetur...</p>
-              </div>
+              {renderPreview()}
               <button
-                onClick={handleDelete}
-                className="btn btn-danger mt-4 rounded-3"
+                onClick={handleDeleteDocument}
+                className="btn btn-danger rounded-pill fw-semibold px-4 mt-2"
               >
-                Delete File
+                🗑️ Delete Document
               </button>
             </div>
           </div>
@@ -195,16 +226,6 @@ const ViewDocumentPage = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Bottom Delete (Optional) */}
-        <div className="text-end mt-4">
-          <button
-            className="btn btn-outline-danger px-4 rounded-pill"
-            onClick={handleDelete}
-          >
-            Delete File
-          </button>
         </div>
       </div>
     </div>

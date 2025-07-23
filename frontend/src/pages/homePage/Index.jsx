@@ -1,35 +1,92 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '../../components/sidbar/Sidebar';
-
-// Import needed icons from react-icons
-import {
-  AiOutlineMessage, // ML NLP
-  AiOutlineEye, // Computer Vision
-  AiOutlineNumber, // Tabular ML (Tabular ML)
-  AiOutlineLineChart, // Time Series
-  AiOutlineCluster, // Clustering
-} from 'react-icons/ai';
-import { AiOutlineStar } from 'react-icons/ai'; // For Generative AI (closest match)
-import { BsBell, BsSearch, BsThreeDotsVertical } from 'react-icons/bs';
 import Header from '../../components/header/Header';
+import { apiRequest } from '../../components/enteryPoint/entryPoint';
+import {
+  AiOutlineMessage,
+  AiOutlineEye,
+  AiOutlineNumber,
+  AiOutlineLineChart,
+  AiOutlineCluster,
+  AiOutlineStar,
+} from 'react-icons/ai';
+import { BsThreeDotsVertical } from 'react-icons/bs';
+import { useNavigate } from 'react-router-dom';
 
 export default function HomePage() {
-  // Document icons (keep using Bs icons for these, or replace if you want)
-  const docIcons = {
-    'bi-file-earmark-bar-graph': <AiOutlineLineChart className="fs-4" />,
-    'bi-lightbulb': <AiOutlineMessage className="fs-4" />,
-    'bi-journal-text': <AiOutlineMessage className="fs-4" />,
-    'bi-mortarboard': <AiOutlineMessage className="fs-4" />,
+  const navigate = useNavigate();
+  const [documents, setDocuments] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [newTitle, setNewTitle] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  const fetchDocuments = async () => {
+    const res = await apiRequest('/documents/', 'get');
+    if (res.success) setDocuments(res.data);
   };
 
-  // ML Area icons using AiOutline* icons
+  const fetchCategories = async () => {
+    const res = await apiRequest('/categories/', 'get');
+    if (res.success) setCategories(res.data);
+  };
+
+  const addDocument = async () => {
+    if (!newTitle.trim()) return alert('Title is required');
+    if (!selectedCategory) return alert('Please select a category');
+
+    const res = await apiRequest('/documents/', 'post', {
+      title: newTitle,
+      category: selectedCategory, // Must match backend expectations
+      content: newContent,
+    });
+
+    if (res.success) {
+      setNewTitle('');
+      setNewContent('');
+      setSelectedCategory('');
+      fetchDocuments();
+    } else {
+      console.error(res.error);
+      alert('Failed to add document');
+    }
+  };
+
+  const filteredDocs = documents.filter((doc) =>
+    doc.title.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const handleDeleteDocument = async (id) => {
+    if (
+      !window.confirm(
+        'Are you sure you want to delete this document? This action cannot be undone.',
+      )
+    ) {
+      return;
+    }
+
+    const response = await apiRequest(`/documents/${id}/`, 'delete');
+    if (response.success) {
+      alert('Document deleted successfully.');
+      fetchDocuments(); // refresh list
+    } else {
+      alert('Failed to delete the document. Please try again.');
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+    fetchCategories();
+  }, []);
+
   const mlAreaIcons = {
-    'bi-robot': <AiOutlineMessage className="fs-5 mb-1" />, // ML NLP
-    'bi-eye': <AiOutlineEye className="fs-5 mb-1" />, // Computer Vision
-    'bi-table': <AiOutlineNumber className="fs-5 mb-1" />, // Tabular ML
-    'bi-diagram-3': <AiOutlineCluster className="fs-5 mb-1" />, // Clustering
-    'bi-clock-history': <AiOutlineLineChart className="fs-5 mb-1" />, // Time Series
-    'bi-stars': <AiOutlineStar className="fs-5 mb-1" />, // Generative AI (closest)
+    'bi-robot': <AiOutlineMessage className="fs-5 mb-1" />,
+    'bi-eye': <AiOutlineEye className="fs-5 mb-1" />,
+    'bi-table': <AiOutlineNumber className="fs-5 mb-1" />,
+    'bi-diagram-3': <AiOutlineCluster className="fs-5 mb-1" />,
+    'bi-clock-history': <AiOutlineLineChart className="fs-5 mb-1" />,
+    'bi-stars': <AiOutlineStar className="fs-5 mb-1" />,
   };
 
   return (
@@ -39,11 +96,10 @@ export default function HomePage() {
         className="p-4 flex-grow-1 text-white"
         style={{ minHeight: '100vh', backgroundColor: '#0a0f1c' }}
       >
-        {/* Header */}
         <Header pageTitle="Home" initials="NB" />
 
-        {/* Repository Section */}
         <div className="row">
+          {/* Document List */}
           <div className="col-md-8 mb-4">
             <div
               className="p-4 rounded"
@@ -56,40 +112,19 @@ export default function HomePage() {
                 type="text"
                 className="form-control mb-3"
                 placeholder="Search documents..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
                   backgroundColor: '#0f172a',
                   color: 'white',
                   borderColor: '#2e3b5c',
                 }}
               />
-              {[
-                {
-                  name: 'Annual Report',
-                  icon: 'document',
-                  description: 'Summary of yearly performance and financials.',
-                },
-                {
-                  name: 'Project Proposal',
-                  icon: 'document',
-                  description: 'Outline of new project objectives and plans.',
-                },
-                {
-                  name: 'Meeting Notes',
-                  icon: 'document',
-                  description: 'Key points and action items from meetings.',
-                },
-                {
-                  name: 'Training Materials',
-                  icon: 'document',
-                  description: 'Resources and guides for employee training.',
-                },
-              ].map((doc, idx) => (
+              {filteredDocs.map((doc) => (
                 <div
-                  key={idx}
+                  key={doc.id}
                   className="pb-3 mb-3"
-                  style={{
-                    borderBottom: '1px solid #2e3b5c',
-                  }}
+                  style={{ borderBottom: '1px solid #2e3b5c' }}
                 >
                   <div className="d-flex justify-content-between align-items-start">
                     <div className="d-flex align-items-start gap-3">
@@ -97,7 +132,6 @@ export default function HomePage() {
                         style={{
                           minWidth: '40px',
                           minHeight: '40px',
-                          textAlign: 'center',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -105,35 +139,40 @@ export default function HomePage() {
                           borderRadius: '8px',
                         }}
                       >
-                        {docIcons[doc.icon]}
+                        <AiOutlineMessage className="fs-4" />
                       </span>
                       <div>
-                        <strong className="text-white">{doc.name}</strong>
-                        <div className="small mt-1">{doc.description}</div>
+                        <strong className="text-white">{doc.title}</strong>
+                        <div className="small mt-1">
+                          {doc.content?.substring(0, 60) || 'No description'}
+                        </div>
                       </div>
                     </div>
                     <div className="dropdown">
                       <button
                         className="btn btn-link text-white p-0"
                         type="button"
-                        id={`dropdownMenuButton${idx}`}
                         data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                        style={{ fontSize: '1.5rem', lineHeight: 1 }}
                       >
-                        {/* Use react-icons for 3 dots */}
                         <BsThreeDotsVertical style={{ fontSize: '1.3rem' }} />
                       </button>
-                      <ul
-                        className="dropdown-menu dropdown-menu-end"
-                        aria-labelledby={`dropdownMenuButton${idx}`}
-                      >
+                      <ul className="dropdown-menu dropdown-menu-end">
                         <li>
-                          <button className="dropdown-item">View</button>
+                          <button
+                            className="dropdown-item"
+                            onClick={() =>
+                              navigate(`/documents/view/${doc.id}`)
+                            }
+                          >
+                            View
+                          </button>
                         </li>
                         <li>
-                          <button className="dropdown-item text-danger">
-                            Delete
+                          <button
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            className="dropdown-item text-danger"
+                          >
+                            🗑️ Delete
                           </button>
                         </li>
                       </ul>
@@ -142,39 +181,10 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            <div
-              className="p-4 rounded d-flex gap-3 mt-4 justify-content-center"
-              style={{
-                backgroundColor: '#1a2238',
-                border: '1px solid #2e3b5c',
-              }}
-            >
-              <button
-                className="btn w-50 d-flex flex-column align-items-center justify-content-center"
-                style={{
-                  backgroundColor: '#0f172a',
-                  color: 'white',
-                  border: '1px solid #2e3b5c',
-                }}
-              >
-                <AiOutlineMessage className="fs-4 mb-1 d-flex align-items-center justify-content-center" />
-                <span className="text-center w-100">ML NLP</span>
-              </button>
-              <button
-                className="btn w-50 d-flex flex-column align-items-center justify-content-center"
-                style={{
-                  backgroundColor: '#0f172a',
-                  color: 'white',
-                  border: '1px solid #2e3b5c',
-                }}
-              >
-                <AiOutlineEye className="fs-4 mb-1 d-flex align-items-center justify-content-center" />
-                <span className="text-center w-100">Computer Vision</span>
-              </button>
-            </div>
           </div>
+
+          {/* Add Document Form */}
           <div className="col-md-4">
-            {/* Add Knowledge */}
             <div
               className="mb-4 p-4 rounded"
               style={{
@@ -187,16 +197,34 @@ export default function HomePage() {
                 type="text"
                 placeholder="Title"
                 className="form-control mb-2"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
               />
+              <select
+                className="form-select mb-2"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
               <textarea
                 rows="3"
                 placeholder="Write Content"
                 className="form-control mb-3"
-              ></textarea>
-              <button className="btn btn-primary w-100">Save</button>
+                value={newContent}
+                onChange={(e) => setNewContent(e.target.value)}
+              />
+              <button className="btn btn-primary w-100" onClick={addDocument}>
+                Save
+              </button>
             </div>
 
-            {/* ML Areas */}
+            {/* Optional ML Tags */}
             <div
               className="p-4 rounded"
               style={{

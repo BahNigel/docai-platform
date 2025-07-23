@@ -72,13 +72,14 @@ export default function AppRoutes() {
         }
       />
       <Route
-        path="/documents/view"
+        path="/documents/view/:id"
         element={
           <ProtectedRoute>
             <ViewDocumentPage />
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/chat"
         element={

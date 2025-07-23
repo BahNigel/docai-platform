@@ -1,9 +1,15 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always"
   },
-  "prettier.enableDebugLogs": false
+  "prettier.enableDebugLogs": false,
+  "python-envs.pythonProjects": []
 }
